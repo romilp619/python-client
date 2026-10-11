@@ -15,9 +15,9 @@ class KnockKnockTool(Tool):
     be capable of completing the joke once it's begun.
     """
 
-    name = "KnockKnockTool"
-    human_description = "Starts a Knock-Knock Joke."
-    agent_description = "Used to begin telling a Knock Knock joke."
+    name: str = "KnockKnockTool"
+    human_description: str = "Starts a Knock-Knock Joke."
+    agent_description: str = "Used to begin telling a Knock Knock joke."
 
     def run(self, tool_input: List[Block], context: AgentContext) -> Union[List[Block], Task[Any]]:
         return [Block(text="Knock-Knock...")]
