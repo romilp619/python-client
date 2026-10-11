@@ -42,7 +42,7 @@ class MultipleChoiceQuestion(BaseModel):
         description="The question, referencing the provided user input.",
     )
     options: List[MultipleChoiceOption] = Field(
-        desecription="The list of options for this question."
+        description="The list of options for this question."
     )
 
     def to_options_string(self):
@@ -63,7 +63,7 @@ class MultipleChoiceQuestion(BaseModel):
         return self.options[i]
 
 
-MultipleChoiceOption.update_forward_refs()
+MultipleChoiceOption.model_rebuild()
 
 DEFAULT_QUESTION = MultipleChoiceQuestion(
     options=[
@@ -100,9 +100,9 @@ class MultipleChoiceTool(Tool):
     Supports traversing a hierarchical tree of multiple-choice answers.
     """
 
-    name = "MultipleChoiceTool"
-    human_description = "Turns a user input into a multiple choice selection."
-    agent_description = (
+    name: str = "MultipleChoiceTool"
+    human_description: str = "Turns a user input into a multiple choice selection."
+    agent_description: str = (
         "Used to transform a user message into a structured answer from a multiple choice question."
     )
 
