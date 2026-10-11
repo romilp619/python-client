@@ -27,9 +27,9 @@ class SentimentAnalysisTool(TextRewritingTool):
     TODO: This feels like it wants to emit data to a side channel. Or perhaps it TAGS the user input block?
     """
 
-    name = "SentimentAnalysisTool"
-    human_description = "Returns the sentiment of a user message."
-    agent_description = "Used to record the sentiment of a user message. The input is a string, and the output is a string with the sentiment."
+    name: str = "SentimentAnalysisTool"
+    human_description: str = "Returns the sentiment of a user message."
+    agent_description: str = "Used to record the sentiment of a user message. The input is a string, and the output is a string with the sentiment."
     labels: List[str] = DEFAULT_LABELS
     rewrite_prompt: str = DEFAULT_PROMPT
 
