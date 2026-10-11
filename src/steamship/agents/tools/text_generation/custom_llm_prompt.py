@@ -1,5 +1,7 @@
 from typing import Any, List, Union
 
+from pydantic import ConfigDict
+
 from steamship import Block, Steamship, Task
 from steamship.agents.llms.steamship_llm import SteamshipLLM
 from steamship.agents.schema import Tool
@@ -27,6 +29,8 @@ class _CustomLLMPromptTool(Tool):
     Note that this is just a simple prompt-completion demo. If you want to build a Chat Agent with a non-GPT tool,
     the best option is to see the steamship.agents.basic_chat.BasicChatAgent class, which incorporates chat history.
     """
+
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
     llm: SteamshipLLM
     rewrite_prompt: str = DEFAULT_PROMPT
