@@ -82,7 +82,7 @@ class SupportLevel(Flag):
 
 class Capability(BaseModel):
     """Base class for all capabilities."""
-    model_config = ConfigDict()
+    model_config = ConfigDict(extra="allow")
 
     NAME: ClassVar[str]
     """Name of the capability.
@@ -102,6 +102,16 @@ class Capability(BaseModel):
     """
 
     request_level: RequestLevel = RequestLevel.NATIVE
+
+    def __eq__(self, other: object) -> bool:
+        """Compare capabilities by their serialized content, regardless of concrete subclass.
+
+        Deserialized requests are represented by the base Capability class with extra fields preserved, so two
+        capabilities that carry the same data are considered equal, as they were under Pydantic v1.
+        """
+        if isinstance(other, BaseModel):
+            return self.model_dump() == other.model_dump()
+        return self.model_dump() == other
 
     def is_plugin_support_valid(
         self, support_level: Optional[SupportLevel]
@@ -298,7 +308,9 @@ class RequestedCapabilities:
             )
         capability = self._requested.get(typ.NAME)
         if capability:
-            return typ.model_validate(capability)
+            # Validate from the serialized form: the requested capability may be a different Capability class
+            # (e.g. the base class from deserialization), which Pydantic v2 will not coerce directly.
+            return typ.model_validate(capability.model_dump())
         return default
 
 
