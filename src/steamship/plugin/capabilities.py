@@ -18,10 +18,9 @@ block indicating at which level they served the requested capabilities.
 """
 import logging
 from enum import Enum, Flag, auto
-from typing import Dict, Iterable, Iterator, List, Mapping, Optional, Tuple, Type, TypeVar, Union
+from typing import ClassVar, Dict, Iterable, Iterator, List, Mapping, Optional, Tuple, Type, TypeVar, Union
 
 from pydantic import ConfigDict, BaseModel, Field
-from pydantic.dataclasses import ClassVar
 
 from steamship import Block, MimeTypes, SteamshipError, Tag
 from steamship.agents.schema import Tool
@@ -95,7 +94,7 @@ class Capability(BaseModel):
     Make an effort to namespace these by organization, since this is technically extensible.
     """
 
-    name: str = Field(init_var=False, default=None)
+    name: str = Field(default=None)
     """Name of the capability as an instance field.
 
     The base class of capabilities doesn't have a NAME, but can represent the unresolved Capabilities that clients are
@@ -143,9 +142,9 @@ class Capability(BaseModel):
 
         Responses indicate the level at which they served the request-level.
         """
-        model_config = ConfigDict(extra="allow", extra="allow")
+        model_config = ConfigDict(extra="allow")
 
-        name: str = Field(init_var=False, default=None)
+        name: str = Field(default=None)
         fulfilled_at: SupportLevel
 
 
@@ -305,7 +304,7 @@ class SystemPromptSupport(CapabilityImpl):
 
     NAME = "steamship.system_prompt_support"
 
-    request_level = RequestLevel.BEST_EFFORT
+    request_level: RequestLevel = RequestLevel.BEST_EFFORT
     """
     If NATIVE, asserts that the model being used supports System Prompt in a first-class capacity.
     If BEST_EFFORT, the system prompt will be incorporated into the request in another way, usually via concatenation
