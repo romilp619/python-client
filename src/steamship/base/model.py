@@ -19,6 +19,29 @@ def _allows_none(annotation) -> bool:
 
 
 class CamelModel(BaseModel):
+    # v1 kept declared fields as ordinary class attributes, so a @staticmethod
+    # sharing a field's name stayed reachable on the class. v2's metaclass
+    # removes field names from the class namespace and raises AttributeError
+    # for anything that is not a private attribute, so the method disappears.
+    # Capture the colliding descriptors while the namespace still holds them,
+    # and put them back once field processing has finished. The field itself is
+    # untouched: it stays in model_fields, and instance access still finds the
+    # per-instance value in __dict__ first.
+    def __init_subclass__(cls, **kwargs):
+        annotations = cls.__dict__.get("__annotations__", {}) or {}
+        cls.__field_name_descriptors__ = {
+            name: value
+            for name, value in cls.__dict__.items()
+            if name in annotations and isinstance(value, (staticmethod, classmethod))
+        }
+        super().__init_subclass__(**kwargs)
+
+    @classmethod
+    def __pydantic_init_subclass__(cls, **kwargs):
+        super().__pydantic_init_subclass__(**kwargs)
+        for name, descriptor in cls.__dict__.get("__field_name_descriptors__", {}).items():
+            setattr(cls, name, descriptor)
+
     def __init__(self, **kwargs):
         kwargs = {k: v for k, v in kwargs.items() if v is not None}
         # v1 treated an Optional field with no default as None when it was unset or passed as None.
