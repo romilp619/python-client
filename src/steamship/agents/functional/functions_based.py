@@ -1,6 +1,6 @@
 import json
 from operator import attrgetter
-from typing import List, Optional
+from typing import ClassVar, List, Optional
 
 from steamship import Block, MimeTypes, Tag
 from steamship.agents.functional.output_parser import FunctionsBasedOutputParser
@@ -12,7 +12,7 @@ from steamship.data.tags.tag_utils import get_tag
 class FunctionsBasedAgent(ChatAgent):
     """Selects actions for AgentService based on OpenAI Function style LLM Prompting."""
 
-    PROMPT = """You are a helpful AI assistant.
+    PROMPT: ClassVar[str] = """You are a helpful AI assistant.
 
 NOTE: Some functions return images, video, and audio files. These multimedia files will be represented in messages as
 UUIDs for Steamship Blocks. When responding directly to a user, you SHOULD print the Steamship Blocks for the images,
