@@ -82,7 +82,7 @@ class SupportLevel(Flag):
 
 class Capability(BaseModel):
     """Base class for all capabilities."""
-    model_config = ConfigDict()
+    model_config = ConfigDict(extra="allow")
 
     NAME: ClassVar[str]
     """Name of the capability.
@@ -102,6 +102,16 @@ class Capability(BaseModel):
     """
 
     request_level: RequestLevel = RequestLevel.NATIVE
+
+    def __eq__(self, other: object) -> bool:
+        """Compare capabilities by their data, as v1 did, regardless of the concrete capability subclass.
+
+        When a request is deserialized, its entries become the base Capability class (with extra fields preserved),
+        so comparing against the original subclass instances must not depend on the exact class.
+        """
+        if isinstance(other, Capability):
+            return self.model_dump() == other.model_dump()
+        return NotImplemented
 
     def is_plugin_support_valid(
         self, support_level: Optional[SupportLevel]
