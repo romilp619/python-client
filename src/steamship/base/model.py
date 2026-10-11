@@ -26,7 +26,29 @@ def _admits_none(annotation) -> bool:
     return False
 
 
+# Staticmethods/classmethods that share a name with an annotated field, captured from the
+# raw class namespace in __init_subclass__ and restored once pydantic has built the fields.
+_COLLIDING_DESCRIPTORS: dict[type, dict[str, Any]] = {}
+
+
 class CamelModel(BaseModel):
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        annotations = cls.__dict__.get("__annotations__", {})
+        _COLLIDING_DESCRIPTORS[cls] = {
+            name: value
+            for name, value in cls.__dict__.items()
+            if name in annotations and isinstance(value, (staticmethod, classmethod))
+        }
+
+    @classmethod
+    def __pydantic_init_subclass__(cls, **kwargs):
+        super().__pydantic_init_subclass__(**kwargs)
+        saved = _COLLIDING_DESCRIPTORS.pop(cls, {})
+        for name, descriptor in saved.items():
+            if name in cls.model_fields:
+                setattr(cls, name, descriptor)
+
     def __init__(self, **kwargs):
         kwargs = {k: v for k, v in kwargs.items() if v is not None}
         # v1 behaviour: Optional[X] fields without a default were optional (defaulting to None).
