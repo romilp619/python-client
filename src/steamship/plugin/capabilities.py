@@ -20,7 +20,7 @@ import logging
 from enum import Enum, Flag, auto
 from typing import ClassVar, Dict, Iterable, Iterator, List, Mapping, Optional, Tuple, Type, TypeVar, Union
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, SerializeAsAny
 
 from steamship import Block, MimeTypes, SteamshipError, Tag
 from steamship.agents.schema import Tool
@@ -183,7 +183,9 @@ class UnsupportedCapabilityError(Exception):
 class CapabilityPluginRequest(BaseModel):
     """Model representing the text in a STEAMSHIP_PLUGIN_CAPABILITIES block when it is used as a request."""
 
-    requested_capabilities: List[Capability]
+    # SerializeAsAny so that subclass-specific fields (e.g. FunctionCallingSupport.functions) are serialized
+    # rather than dropped by the declared base type Capability.
+    requested_capabilities: List[SerializeAsAny[Capability]]
 
     @classmethod
     def from_block(cls, block: Block) -> "CapabilityPluginRequest":
