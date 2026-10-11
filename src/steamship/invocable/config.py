@@ -1,11 +1,32 @@
 import json
+import types
 from enum import Enum
 from pathlib import Path
-from typing import Dict
+from typing import Dict, Union, get_args, get_origin
+
+from pydantic_core import PydanticUndefined
 
 from steamship.base.error import SteamshipError
 from steamship.base.model import CamelModel
 from steamship.data.manifest import ConfigParameter, ConfigParameterType
+
+_UNION_TYPES = (Union, getattr(types, "UnionType", Union))
+
+
+def _v1_type_(annotation):
+    """Approximates the v1 `ModelField.type_` attribute, which held the innermost
+    type after stripping Optional and container wrappers, while v2 exposes the
+    full `annotation`."""
+    origin = get_origin(annotation)
+    args = get_args(annotation)
+    if origin in _UNION_TYPES:
+        non_none = [a for a in args if a is not type(None)]
+        if len(non_none) == 1:
+            return _v1_type_(non_none[0])
+        return annotation
+    if origin in (list, set, frozenset, dict) and args:
+        return _v1_type_(args[-1])
+    return annotation
 
 
 class Config(CamelModel):
@@ -52,10 +73,14 @@ class Config(CamelModel):
     @classmethod
     def get_config_parameters(cls) -> Dict[str, ConfigParameter]:
         result = {}
-        for field_name, field in cls.__fields__.items():
-            description = field.field_info.description
-            type_ = ConfigParameterType.from_python_type(field.type_)
-            default_ = cls.strip_enum(field.default)
+        for field_name, field in cls.model_fields.items():
+            description = field.description
+            type_ = ConfigParameterType.from_python_type(_v1_type_(field.annotation))
+            default_ = field.default
+            if default_ is PydanticUndefined:
+                # v1 reported a missing default as None
+                default_ = None
+            default_ = cls.strip_enum(default_)
 
             # Note: Pydantic treats any field with a default value as being `required == False`, which is not strictly
             # the same thing as being optional. Below we use "required is False and allow_none is True" so that
@@ -63,7 +88,7 @@ class Config(CamelModel):
             # the notion of whether the absense of a value will truly be treated as absence.
             # That way it can provide hints to the user to minimize surprise about how their inputs will be interpreted.
 
-            # optional_ = field.required is False and field.allow_none is True
+            # optional_ = field.is_required() is False and field.allow_none is True
 
             result[field_name] = ConfigParameter(
                 type=type_,
