@@ -39,19 +39,19 @@ class DeployableType(str, Enum):
 
 
 class SteamshipRegistry(BaseModel):
-    tagline: Optional[str]  # noqa: N815
-    tagline2: Optional[str]  # noqa: N815
-    usefulFor: Optional[str]  # noqa: N815
-    videoUrl: Optional[str]  # noqa: N815
-    githubUrl: Optional[str]  # noqa: N815
-    demoUrl: Optional[str]  # noqa: N815
-    blogUrl: Optional[str]  # noqa: N815
-    jupyterUrl: Optional[str]  # noqa: N815
-    authorGithub: Optional[str]  # noqa: N815
-    authorName: Optional[str]  # noqa: N815
-    authorEmail: Optional[str]  # noqa: N815
-    authorTwitter: Optional[str]  # noqa: N815
-    authorUrl: Optional[str]  # noqa: N815
+    tagline: Optional[str] = None  # noqa: N815
+    tagline2: Optional[str] = None  # noqa: N815
+    usefulFor: Optional[str] = None  # noqa: N815
+    videoUrl: Optional[str] = None  # noqa: N815
+    githubUrl: Optional[str] = None  # noqa: N815
+    demoUrl: Optional[str] = None  # noqa: N815
+    blogUrl: Optional[str] = None  # noqa: N815
+    jupyterUrl: Optional[str] = None  # noqa: N815
+    authorGithub: Optional[str] = None  # noqa: N815
+    authorName: Optional[str] = None  # noqa: N815
+    authorEmail: Optional[str] = None  # noqa: N815
+    authorTwitter: Optional[str] = None  # noqa: N815
+    authorUrl: Optional[str] = None  # noqa: N815
     tags: List[str]
 
 
@@ -66,13 +66,13 @@ class Manifest(BaseModel):
     type: DeployableType
     handle: str
     version: str
-    description: Optional[str]
-    author: Optional[str]
+    description: Optional[str] = None
+    author: Optional[str] = None
     entrypoint: str = "Unused"
     public: bool
-    plugin: Optional[PluginConfig]
+    plugin: Optional[PluginConfig] = None
     build_config: Dict[str, List[str]] = {"ignore": []}
-    configTemplate: Optional[Dict[str, ConfigParameter]]  # noqa: N815
+    configTemplate: Optional[Dict[str, ConfigParameter]] = None  # noqa: N815
     steamshipRegistry: SteamshipRegistry  # noqa: N815
 
     @staticmethod
