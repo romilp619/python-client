@@ -20,7 +20,7 @@ import logging
 from enum import Enum, Flag, auto
 from typing import Dict, Iterable, Iterator, List, Mapping, Optional, Tuple, Type, TypeVar, Union
 
-from pydantic import BaseModel, Extra, Field
+from pydantic import ConfigDict, BaseModel, Field
 from pydantic.dataclasses import ClassVar
 
 from steamship import Block, MimeTypes, SteamshipError, Tag
@@ -83,9 +83,7 @@ class SupportLevel(Flag):
 
 class Capability(BaseModel):
     """Base class for all capabilities."""
-
-    class Config:
-        extra = Extra.allow
+    model_config = ConfigDict()
 
     NAME: ClassVar[str]
     """Name of the capability.
@@ -145,17 +143,14 @@ class Capability(BaseModel):
 
         Responses indicate the level at which they served the request-level.
         """
-
-        class Config:
-            extra = Extra.allow
+        model_config = ConfigDict(extra="allow", extra="allow")
 
         name: str = Field(init_var=False, default=None)
         fulfilled_at: SupportLevel
 
 
 class CapabilityImpl(Capability):
-    class Config:
-        extra = Extra.forbid
+    model_config = ConfigDict(extra="forbid")
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

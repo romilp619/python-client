@@ -87,8 +87,8 @@ def post(path: str, **kwargs):
 
 
 class RouteMethod(BaseModel):
-    attribute: Any
-    verb: Optional[Verb]
+    attribute: Any = None
+    verb: Optional[Verb] = None
     path: str
     config: Dict[str, Any]
 
