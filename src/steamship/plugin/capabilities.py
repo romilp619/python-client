@@ -18,9 +18,9 @@ block indicating at which level they served the requested capabilities.
 """
 import logging
 from enum import Enum, Flag, auto
-from typing import ClassVar, Dict, Iterable, Iterator, List, Mapping, Optional, Tuple, Type, TypeVar, Union
+from typing import Any, ClassVar, Dict, Iterable, Iterator, List, Mapping, Optional, Tuple, Type, TypeVar, Union
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, field_serializer
 
 from steamship import Block, MimeTypes, SteamshipError, Tag
 from steamship.agents.schema import Tool
@@ -181,6 +181,13 @@ class CapabilityPluginRequest(BaseModel):
     """Model representing the text in a STEAMSHIP_PLUGIN_CAPABILITIES block when it is used as a request."""
 
     requested_capabilities: List[Capability]
+
+    @field_serializer("requested_capabilities")
+    def _serialize_requested_capabilities(self, value: List[Capability]) -> List[Dict[str, Any]]:
+        # Serialize each requested capability with its own runtime fields.  Without this, pydantic serializes list
+        # elements using the declared base type (Capability) and drops subclass-only fields such as the functions of a
+        # FunctionCallingSupport, so a round-tripped request would no longer match the original.
+        return [capability.model_dump() for capability in value]
 
     @classmethod
     def from_block(cls, block: Block) -> "CapabilityPluginRequest":
