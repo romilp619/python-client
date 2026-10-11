@@ -31,6 +31,6 @@ class Action(BaseModel):
 class FinishAction(Action):
     """Represents a final selected action in an Agent Execution."""
 
-    tool = "Agent-FinishAction"
+    tool: str = "Agent-FinishAction"
     input: List[Block] = []
-    is_final = True
+    is_final: bool = True
