@@ -59,15 +59,15 @@ class SlackThreadingBehavior(Enum):
 class SlackElement(BaseModel):
     """An element of a Slack Block."""
 
-    type: Optional[str] = Field(description="Type of block")
+    type: Optional[str] = Field(None, description="Type of block")
     """Common types are:
         - rich_text_section
         - user
         - text
     """
-    elements: Optional[List["SlackElement"]] = Field(description="Element")
-    user_id: Optional[str] = Field(description="The user id that created the element")
-    text: Optional[str] = Field(description="The text of the element. Does not contain the user")
+    elements: Optional[List["SlackElement"]] = Field(None, description="Element")
+    user_id: Optional[str] = Field(None, description="The user id that created the element")
+    text: Optional[str] = Field(None, description="The text of the element. Does not contain the user")
 
     def to_blocks(self) -> Optional[List[Block]]:
         """Return self as a list of Steamship Blocks."""
@@ -86,12 +86,12 @@ class SlackElement(BaseModel):
 class SlackBlock(BaseModel):
     """A Slack Block."""
 
-    type: Optional[str] = Field(description="Type of block")
+    type: Optional[str] = Field(None, description="Type of block")
     """Common types are:
         - rich_text
     """
-    block_id: Optional[str] = Field(description="ID of the block")
-    elements: Optional[List[SlackElement]] = Field(description="Element")
+    block_id: Optional[str] = Field(None, description="ID of the block")
+    elements: Optional[List[SlackElement]] = Field(None, description="Element")
 
     def to_blocks(self) -> Optional[List[Block]]:
         """Return self as a list of Steamship Blocks."""
@@ -106,7 +106,7 @@ class SlackBlock(BaseModel):
 class SlackEvent(BaseModel):
     """A Slack Event as reported to the Bot."""
 
-    type: Optional[str] = Field(description="Type of event")
+    type: Optional[str] = Field(None, description="Type of event")
     """Common types are:
         - app_home_opened
         - app_mention,
@@ -122,32 +122,32 @@ class SlackEvent(BaseModel):
 
     """
     user: Optional[str] = Field(
-        description="The user ID belonging to the user that incited this action. Not included in all events as not all events are controlled by users. This is not the Slack handle."
+        None, description="The user ID belonging to the user that incited this action. Not included in all events as not all events are controlled by users. This is not the Slack handle."
     )
-    channel: Optional[str] = Field(description="Channel of the event")
-    tab: Optional[str] = Field(description="Tab in which the event occurred")
+    channel: Optional[str] = Field(None, description="Channel of the event")
+    tab: Optional[str] = Field(None, description="Tab in which the event occurred")
     event_ts: Optional[str] = Field(
-        description="Timestamp of the event. A string, but is a floating point number within that."
+        None, description="Timestamp of the event. A string, but is a floating point number within that."
     )
     ts: Optional[str] = Field(
-        description="Timestamp of the message. A string, but is a floating point number within that."
+        None, description="Timestamp of the message. A string, but is a floating point number within that."
     )
     thread_ts: Optional[str] = Field(
-        description="Timestamp of the thread this message is a part of, if any.  Same format as `ts`."
+        None, description="Timestamp of the thread this message is a part of, if any.  Same format as `ts`."
     )
     item: Optional[str] = Field(
-        description="Data specific to the underlying object type being described."
+        None, description="Data specific to the underlying object type being described."
     )
-    client_msg_id: Optional[str] = Field(description="")
+    client_msg_id: Optional[str] = Field(None, description="")
     text: Optional[str] = Field(
-        description="The text preview of the sequence of messages. Contains the user ID."
+        None, description="The text preview of the sequence of messages. Contains the user ID."
     )
     blocks: Optional[List[SlackBlock]] = Field(
-        description="The text preview of the sequence of messages"
+        None, description="The text preview of the sequence of messages"
     )
-    team: Optional[str] = Field(description="The team from which the message came")
+    team: Optional[str] = Field(None, description="The team from which the message came")
     bot_id: Optional[str] = Field(
-        description="The unique identifier for the bot that sent the event."
+        None, description="The unique identifier for the bot that sent the event."
     )
 
     def is_message(self) -> bool:
@@ -179,20 +179,20 @@ class SlackRequest(BaseModel):
     """
 
     token: Optional[str] = Field(
-        description="The shared-private callback token that authenticates this callback to the application as having come from Slack. Match this against what you were given when the subscription was created. If it does not match, do not process the event and discard it."
+        None, description="The shared-private callback token that authenticates this callback to the application as having come from Slack. Match this against what you were given when the subscription was created. If it does not match, do not process the event and discard it."
     )
     team_id: Optional[str] = Field(
-        description="The unique identifier for the workspace/team where this event occurred."
+        None, description="The unique identifier for the workspace/team where this event occurred."
     )
 
     api_app_id: Optional[str] = Field(
-        description="The unique identifier for the application this event is intended for."
+        None, description="The unique identifier for the application this event is intended for."
     )
-    event: Optional[SlackEvent] = Field(description="Slack event")
-    type: Optional[str] = Field(description="The type of inbound request")  # event_callback
-    event_id: Optional[str] = Field(description="The event ID")
-    event_time: Optional[int] = Field(description="The event time")
-    event_context: Optional[str] = Field(description="The event context key")
+    event: Optional[SlackEvent] = Field(None, description="Slack event")
+    type: Optional[str] = Field(None, description="The type of inbound request")  # event_callback
+    event_id: Optional[str] = Field(None, description="The event ID")
+    event_time: Optional[int] = Field(None, description="The event time")
+    event_context: Optional[str] = Field(None, description="The event context key")
 
 
 class SlackTransportConfig(Config):

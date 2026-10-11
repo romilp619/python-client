@@ -23,7 +23,7 @@ Your answer. Respond with ONLY the number of the correct option:"""
 
 class MultipleChoiceOption(BaseModel):
     name: str = Field(description="The name of the answer")
-    description: Optional[str] = Field(description="Short description of the answer")
+    description: Optional[str] = Field(None, description="Short description of the answer")
 
     question: Optional["MultipleChoiceQuestion"] = Field(
         None, description="A Question to traverse."

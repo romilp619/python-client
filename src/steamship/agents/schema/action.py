@@ -18,7 +18,7 @@ class Action(BaseModel):
     input: List[Block]
     """Data provided directly to the Tool (full context is passed in run)."""
 
-    output: Optional[List[Block]]
+    output: Optional[List[Block]] = None
     """Any direct output produced by the Tool."""
 
     is_final: bool = Field(default=False)

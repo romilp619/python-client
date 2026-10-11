@@ -2,8 +2,7 @@ import re
 from typing import TypeVar
 
 import inflection
-from pydantic import BaseModel
-from pydantic.generics import GenericModel
+from pydantic import ConfigDict, BaseModel
 
 T = TypeVar("T")  # Declare type variable
 
@@ -17,13 +16,8 @@ class CamelModel(BaseModel):
     def __init__(self, **kwargs):
         kwargs = {k: v for k, v in kwargs.items() if v is not None}
         super().__init__(**kwargs)
-
-    class Config:
-        alias_generator = to_camel
-        allow_population_by_field_name = True
-        # Populate enum values with their value, rather than the raw enum. Important to serialise model.dict()
-        use_enum_values = True
+    model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True, use_enum_values=True)
 
 
-class GenericCamelModel(CamelModel, GenericModel):
+class GenericCamelModel(CamelModel, BaseModel):
     pass

@@ -2,8 +2,6 @@ from __future__ import annotations
 
 from typing import Generic, Optional, TypeVar
 
-from pydantic.generics import GenericModel
-
 # Note!
 # =====
 #
@@ -12,6 +10,7 @@ from pydantic.generics import GenericModel
 #
 from steamship.base import Task
 from steamship.base.model import CamelModel, to_camel
+from pydantic import BaseModel, ConfigDict
 
 T = TypeVar("T")
 U = TypeVar("U")
@@ -28,7 +27,7 @@ class PluginRequestContext(CamelModel):
     plugin_instance_handle: str = None
 
 
-class PluginRequest(GenericModel, Generic[T]):
+class PluginRequest(BaseModel, Generic[T]):
     # The primary payload of the request. E.g. RawDataPluginInput, BlockAndTagPluginInput
     data: Optional[T] = None
 
@@ -40,7 +39,4 @@ class PluginRequest(GenericModel, Generic[T]):
 
     # Whether this plugin request is a status check against ongoing work. If True, status must be not None
     is_status_check: bool = False
-
-    class Config:
-        alias_generator = to_camel
-        allow_population_by_field_name = True
+    model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True)

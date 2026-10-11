@@ -2,7 +2,7 @@
 import logging
 from typing import Any, List, Optional, Union
 
-from pydantic import Field
+from pydantic import ConfigDict, Field
 
 from steamship import Block, File, PluginInstance, Steamship, SteamshipError, Task
 from steamship.agents.llms import OpenAI
@@ -26,9 +26,7 @@ class SearchTool(Tool):
 
     cache: bool = False
     cache_store: Optional[KeyValueStore] = Field(None, exclude=True)
-
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
     def run(self, tool_input: List[Block], context: AgentContext) -> Union[List[Block], Task[Any]]:
         """Execute a search using the Steamship plugin."""

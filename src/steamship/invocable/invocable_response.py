@@ -6,7 +6,6 @@ import logging
 from typing import Any, Dict, Generic, Optional, TypeVar, Union
 
 from pydantic import BaseModel
-from pydantic.generics import GenericModel
 
 from steamship import File
 from steamship.base import MimeTypes, SteamshipError, Task, TaskState
@@ -29,7 +28,7 @@ class Http(CamelModel):
 T = TypeVar("T")
 
 
-class InvocableResponse(GenericModel, Generic[T]):
+class InvocableResponse(BaseModel, Generic[T]):
     """Mirrors the Response object in the Steamship server."""
 
     data: T = None  # Data for successful or synchronous requests.
