@@ -1,6 +1,7 @@
 import re
 import types
 import typing
+import weakref
 from typing import Any, TypeVar, Union
 
 import inflection
@@ -28,7 +29,29 @@ def _admits_none(annotation) -> bool:
     return False
 
 
+# Static/class methods that share a name with an annotated field, captured from the
+# raw class namespace so they can be restored after pydantic removes field names.
+_COLLIDING_DESCRIPTORS: "weakref.WeakKeyDictionary[type, dict]" = weakref.WeakKeyDictionary()
+
+
 class CamelModel(BaseModel):
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        own_annotations = cls.__dict__.get("__annotations__") or {}
+        colliding = {
+            name: value
+            for name, value in cls.__dict__.items()
+            if name in own_annotations and isinstance(value, (staticmethod, classmethod))
+        }
+        if colliding:
+            _COLLIDING_DESCRIPTORS[cls] = colliding
+
+    @classmethod
+    def __pydantic_init_subclass__(cls, **kwargs):
+        super().__pydantic_init_subclass__(**kwargs)
+        for name, descriptor in _COLLIDING_DESCRIPTORS.pop(cls, {}).items():
+            type.__setattr__(cls, name, descriptor)
+
     def __init__(self, **kwargs):
         kwargs = {k: v for k, v in kwargs.items() if v is not None}
         # v1 treated Optional[X] fields without a default as optional (default None).
