@@ -1,11 +1,37 @@
 import json
+import types
+import typing
 from enum import Enum
 from pathlib import Path
-from typing import Dict
+from typing import Any, Dict, Union
+
+from pydantic_core import PydanticUndefined
 
 from steamship.base.error import SteamshipError
 from steamship.base.model import CamelModel
 from steamship.data.manifest import ConfigParameter, ConfigParameterType
+
+_UnionType = getattr(types, "UnionType", None)
+
+
+def _v1_field_type(annotation: Any) -> Any:
+    """Approximate the v1 `ModelField.type_`: strip Optional and take the inner type of simple containers."""
+    origin = typing.get_origin(annotation)
+    if origin is Union or (_UnionType is not None and origin is _UnionType):
+        args = [a for a in typing.get_args(annotation) if a is not type(None)]
+        if len(args) == 1:
+            annotation = args[0]
+            origin = typing.get_origin(annotation)
+
+    if origin in (list, set, frozenset):
+        args = typing.get_args(annotation)
+        if args:
+            return args[0]
+    elif origin is dict:
+        args = typing.get_args(annotation)
+        if len(args) == 2:
+            return args[1]
+    return annotation
 
 
 class Config(CamelModel):
@@ -52,10 +78,15 @@ class Config(CamelModel):
     @classmethod
     def get_config_parameters(cls) -> Dict[str, ConfigParameter]:
         result = {}
-        for field_name, field in cls.__fields__.items():
-            description = field.field_info.description
-            type_ = ConfigParameterType.from_python_type(field.type_)
-            default_ = cls.strip_enum(field.default)
+        for field_name, field in cls.model_fields.items():
+            description = field.description
+            type_ = ConfigParameterType.from_python_type(_v1_field_type(field.annotation))
+
+            # v2 uses PydanticUndefined for "no default"; v1 reported None in that case.
+            raw_default = field.default
+            if raw_default is PydanticUndefined:
+                raw_default = None
+            default_ = cls.strip_enum(raw_default)
 
             # Note: Pydantic treats any field with a default value as being `required == False`, which is not strictly
             # the same thing as being optional. Below we use "required is False and allow_none is True" so that
@@ -63,7 +94,7 @@ class Config(CamelModel):
             # the notion of whether the absense of a value will truly be treated as absence.
             # That way it can provide hints to the user to minimize surprise about how their inputs will be interpreted.
 
-            # optional_ = field.required is False and field.allow_none is True
+            # optional_ = field.is_required() is False and <annotation admits None>
 
             result[field_name] = ConfigParameter(
                 type=type_,
