@@ -18,7 +18,7 @@ from steamship.data.manifest import Manifest
 
 class PackageCreateRequest(CreateRequest):
     is_public: bool = False
-    fetch_if_exists = False
+    fetch_if_exists: bool = False
     profile: Optional[Manifest] = None
 
 
@@ -31,10 +31,10 @@ class PackageUpdateRequest(UpdateRequest):
 
 
 class Package(CamelModel):
-    client: Client = Field(None, exclude=True)
-    id: str = None
-    handle: str = None
-    user_id: str = None
+    client: Optional[Client] = Field(None, exclude=True)
+    id: Optional[str] = None
+    handle: Optional[str] = None
+    user_id: Optional[str] = None
     profile: Optional[Manifest] = None
     description: Optional[str] = None
     readme: Optional[str] = None
