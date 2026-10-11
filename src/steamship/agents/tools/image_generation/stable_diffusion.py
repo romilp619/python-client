@@ -11,7 +11,7 @@ class StableDiffusionTool(ImageGeneratorTool):
 
     name: str = "StableDiffusionTool"
     human_description: str = "Generates an image from text."
-    agent_description = (
+    agent_description: str = (
         "Used to generate images from text prompts. Only use if the user has asked directly for an image. "
         "When using this tool, the input should be a plain text string that describes, "
         "in detail, the desired image."
