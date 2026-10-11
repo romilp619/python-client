@@ -1,3 +1,5 @@
+from typing import ClassVar
+
 from steamship import SteamshipError
 from steamship.agents.llms.steamship_llm import SteamshipLLM
 from steamship.agents.schema import Action, Agent, AgentContext, FinishAction
@@ -23,7 +25,7 @@ class _BasicChatAgent(Agent):
     A secondary side effect of eliminating tooling is that the less processing must occur before a response begins.
     """
 
-    PROMPT = DEFAULT_PROMPT
+    PROMPT: ClassVar[str] = DEFAULT_PROMPT
 
     def __init__(self, llm: SteamshipLLM, **kwargs):
         # Throw if the user has provided tools as a way to ensure the user understands the limitation of this agent.

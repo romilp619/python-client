@@ -18,7 +18,7 @@ class Action(BaseModel):
     input: List[Block]
     """Data provided directly to the Tool (full context is passed in run)."""
 
-    output: Optional[List[Block]]
+    output: Optional[List[Block]] = None
     """Any direct output produced by the Tool."""
 
     is_final: bool = Field(default=False)
@@ -31,6 +31,6 @@ class Action(BaseModel):
 class FinishAction(Action):
     """Represents a final selected action in an Agent Execution."""
 
-    tool = "Agent-FinishAction"
+    tool: str = "Agent-FinishAction"
     input: List[Block] = []
-    is_final = True
+    is_final: bool = True

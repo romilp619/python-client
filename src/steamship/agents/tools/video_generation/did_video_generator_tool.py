@@ -30,7 +30,7 @@ class DIDVideoGeneratorTool(VideoGeneratorTool):
 
     name: str = "DIDVideoGeneratorTool"
     human_description: str = "Generates an a video of you speaking a response to a user."
-    agent_description = (
+    agent_description: str = (
         "Used to generate a video of you from text. Use if the user has asked for a video response.  "
         "The input is the text that you want to say. "
         "The output is the video of you saying it."

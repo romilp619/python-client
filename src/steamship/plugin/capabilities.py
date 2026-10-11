@@ -18,10 +18,9 @@ block indicating at which level they served the requested capabilities.
 """
 import logging
 from enum import Enum, Flag, auto
-from typing import Dict, Iterable, Iterator, List, Mapping, Optional, Tuple, Type, TypeVar, Union
+from typing import ClassVar, Dict, Iterable, Iterator, List, Mapping, Optional, Tuple, Type, TypeVar, Union
 
-from pydantic import BaseModel, Extra, Field
-from pydantic.dataclasses import ClassVar
+from pydantic import BaseModel, ConfigDict, Field, SerializeAsAny
 
 from steamship import Block, MimeTypes, SteamshipError, Tag
 from steamship.agents.schema import Tool
@@ -83,9 +82,7 @@ class SupportLevel(Flag):
 
 class Capability(BaseModel):
     """Base class for all capabilities."""
-
-    class Config:
-        extra = Extra.allow
+    model_config = ConfigDict(extra="allow")
 
     NAME: ClassVar[str]
     """Name of the capability.
@@ -97,7 +94,7 @@ class Capability(BaseModel):
     Make an effort to namespace these by organization, since this is technically extensible.
     """
 
-    name: str = Field(init_var=False, default=None)
+    name: Optional[str] = Field(default=None)
     """Name of the capability as an instance field.
 
     The base class of capabilities doesn't have a NAME, but can represent the unresolved Capabilities that clients are
@@ -105,6 +102,16 @@ class Capability(BaseModel):
     """
 
     request_level: RequestLevel = RequestLevel.NATIVE
+
+    def __eq__(self, other: object) -> bool:
+        """Compare capabilities by their serialized content, regardless of concrete subclass.
+
+        Deserialized requests are represented by the base Capability class with extra fields preserved, so two
+        capabilities that carry the same data are considered equal, as they were under Pydantic v1.
+        """
+        if isinstance(other, BaseModel):
+            return self.model_dump() == other.model_dump()
+        return self.model_dump() == other
 
     def is_plugin_support_valid(
         self, support_level: Optional[SupportLevel]
@@ -145,17 +152,14 @@ class Capability(BaseModel):
 
         Responses indicate the level at which they served the request-level.
         """
+        model_config = ConfigDict(extra="allow")
 
-        class Config:
-            extra = Extra.allow
-
-        name: str = Field(init_var=False, default=None)
+        name: Optional[str] = Field(default=None)
         fulfilled_at: SupportLevel
 
 
 class CapabilityImpl(Capability):
-    class Config:
-        extra = Extra.forbid
+    model_config = ConfigDict(extra="forbid")
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -179,20 +183,22 @@ class UnsupportedCapabilityError(Exception):
 class CapabilityPluginRequest(BaseModel):
     """Model representing the text in a STEAMSHIP_PLUGIN_CAPABILITIES block when it is used as a request."""
 
-    requested_capabilities: List[Capability]
+    requested_capabilities: List[SerializeAsAny[Capability]]
 
     @classmethod
     def from_block(cls, block: Block) -> "CapabilityPluginRequest":
         assert block.mime_type == MimeTypes.STEAMSHIP_PLUGIN_CAPABILITIES_REQUEST
         assert block.text
-        return cls.parse_raw(block.text)
+        return cls.model_validate_json(block.text)
 
     def to_block(self) -> Block:
-        return Block(text=self.json(), mime_type=MimeTypes.STEAMSHIP_PLUGIN_CAPABILITIES_REQUEST)
+        return Block(
+            text=self.model_dump_json(), mime_type=MimeTypes.STEAMSHIP_PLUGIN_CAPABILITIES_REQUEST
+        )
 
     def create_block(self, client: Client, file_id: str) -> Block:
         return Block.create(
-            text=self.json(),
+            text=self.model_dump_json(),
             mime_type=MimeTypes.STEAMSHIP_PLUGIN_CAPABILITIES_REQUEST,
             file_id=file_id,
             client=client,
@@ -208,14 +214,16 @@ class CapabilityPluginResponse(BaseModel):
     def from_block(cls, block: Block) -> "CapabilityPluginResponse":
         assert block.mime_type == MimeTypes.STEAMSHIP_PLUGIN_CAPABILITIES_RESPONSE
         assert block.text
-        return cls.parse_raw(block.text)
+        return cls.model_validate_json(block.text)
 
     def to_block(self) -> Block:
-        return Block(text=self.json(), mime_type=MimeTypes.STEAMSHIP_PLUGIN_CAPABILITIES_RESPONSE)
+        return Block(
+            text=self.model_dump_json(), mime_type=MimeTypes.STEAMSHIP_PLUGIN_CAPABILITIES_RESPONSE
+        )
 
     def create_block(self, client: Client, file_id: str) -> Block:
         return Block.create(
-            text=self.json(),
+            text=self.model_dump_json(),
             mime_type=MimeTypes.STEAMSHIP_PLUGIN_CAPABILITIES_RESPONSE,
             file_id=file_id,
             client=client,
@@ -287,7 +295,9 @@ class RequestedCapabilities:
                 capabilities_block = block
         if not capabilities_block:
             return None
-        return self.load_requests(CapabilityPluginRequest.parse_raw(capabilities_block.text))
+        return self.load_requests(
+            CapabilityPluginRequest.model_validate_json(capabilities_block.text)
+        )
 
     def get(
         self, typ: Type[CapabilityType], default: Optional[CapabilityType] = None
@@ -298,7 +308,9 @@ class RequestedCapabilities:
             )
         capability = self._requested.get(typ.NAME)
         if capability:
-            return typ.parse_obj(capability)
+            # Validate from the serialized form: the requested capability may be a different Capability class
+            # (e.g. the base class from deserialization), which Pydantic v2 will not coerce directly.
+            return typ.model_validate(capability.model_dump())
         return default
 
 
@@ -308,9 +320,9 @@ class SystemPromptSupport(CapabilityImpl):
     The system prompt will come across in other blocks on the request.
     """
 
-    NAME = "steamship.system_prompt_support"
+    NAME: ClassVar[str] = "steamship.system_prompt_support"
 
-    request_level = RequestLevel.BEST_EFFORT
+    request_level: RequestLevel = RequestLevel.BEST_EFFORT
     """
     If NATIVE, asserts that the model being used supports System Prompt in a first-class capacity.
     If BEST_EFFORT, the system prompt will be incorporated into the request in another way, usually via concatenation
@@ -324,7 +336,7 @@ class ConversationSupport(CapabilityImpl):
     The content of the conversation will come across in other blocks on the request, using the CHAT TagKind.
     """
 
-    NAME = "steamship.conversation_support"
+    NAME: ClassVar[str] = "steamship.conversation_support"
 
 
 class FunctionCallingSupport(CapabilityImpl):
@@ -335,7 +347,7 @@ class FunctionCallingSupport(CapabilityImpl):
     following request.
     """
 
-    NAME = "steamship.function_calling_support"
+    NAME: ClassVar[str] = "steamship.function_calling_support"
 
     functions: List[Tool]
     """A list of Tools which the LLM can choose from to execute."""
@@ -359,16 +371,16 @@ class FunctionCallingSupport(CapabilityImpl):
         def from_block(cls, block: Block) -> "FunctionCallingSupport.FunctionCallInvocation":
             assert block.mime_type == cls.MIME_TYPE
             assert block.text
-            return cls.parse_raw(block.text)
+            return cls.model_validate_json(block.text)
 
         def to_block(self) -> Block:
-            return Block(text=self.json(), mime_type=self.MIME_TYPE)
+            return Block(text=self.model_dump_json(), mime_type=self.MIME_TYPE)
 
         def create_block(
             self, client: Client, file_id: str, tags: Optional[List[Tag]] = None
         ) -> Block:
             return Block.create(
-                text=self.json(),
+                text=self.model_dump_json(),
                 mime_type=self.MIME_TYPE,
                 file_id=file_id,
                 client=client,
@@ -393,16 +405,16 @@ class FunctionCallingSupport(CapabilityImpl):
         def from_block(cls, block: Block) -> "FunctionCallingSupport.FunctionCallResult":
             assert block.mime_type == cls.MIME_TYPE
             assert block.text
-            return cls.parse_raw(block.text)
+            return cls.model_validate_json(block.text)
 
         def to_block(self) -> Block:
-            return Block(text=self.json(), mime_type=self.MIME_TYPE)
+            return Block(text=self.model_dump_json(), mime_type=self.MIME_TYPE)
 
         def create_block(
             self, client: Client, file_id: str, tags: Optional[List[Tag]] = None
         ) -> Block:
             return Block.create(
-                text=self.json(),
+                text=self.model_dump_json(),
                 mime_type=self.MIME_TYPE,
                 file_id=file_id,
                 client=client,
