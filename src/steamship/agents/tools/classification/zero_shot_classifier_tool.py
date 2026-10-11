@@ -29,9 +29,9 @@ class ZeroShotClassifierTool(TextRewritingTool):
     TODO: This feels like it wants to emit data to a side channel. Or perhaps it TAGS the user input block?
     """
 
-    name = "ZeroShotClassifierTool"
-    human_description = "Classifies a user message."
-    agent_description = "Used to classify a user message. The input is a string, and the output is a string with the classification label."
+    name: str = "ZeroShotClassifierTool"
+    human_description: str = "Classifies a user message."
+    agent_description: str = "Used to classify a user message. The input is a string, and the output is a string with the classification label."
     labels: List[str] = DEFAULT_LABELS
     rewrite_prompt: str = DEFAULT_PROMPT
 
