@@ -46,9 +46,9 @@ class PromptDatabaseQATool(TextRewritingTool):
 
     """  # noqa: RST203, RST301
 
-    name = "PromptDatabaseQATool"
-    human_description = "Answers questions about the number of subway stations in US cities."
-    agent_description = "Used to answer questions about the number of subway stations in US cities. The input is the question about subway stations. The output is the answer as a sentence."
+    name: str = "PromptDatabaseQATool"
+    human_description: str = "Answers questions about the number of subway stations in US cities."
+    agent_description: str = "Used to answer questions about the number of subway stations in US cities. The input is the question about subway stations. The output is the answer as a sentence."
     question_answering_prompt: Optional[str] = DEFAULT_QUESTION_ANSWERING_PROMPT
     facts: List[str] = DEFAULT_FACTS
 
