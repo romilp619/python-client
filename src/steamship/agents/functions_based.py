@@ -1,4 +1,4 @@
-from typing import Iterable, List, Optional
+from typing import ClassVar, Iterable, List, Optional
 
 from steamship import Block, MimeTypes, SteamshipError, Tag
 from steamship.agents.llms.steamship_llm import SteamshipLLM
@@ -19,7 +19,7 @@ class _FunctionsBasedAgent(Agent):
     This class is part of active development and not ready for usage yet.
     """
 
-    PROMPT = """You are a helpful AI assistant.
+    PROMPT: ClassVar[str] = """You are a helpful AI assistant.
 
 NOTE: Some functions return images, video, and audio files. These multimedia files will be represented in messages as
 UUIDs for Steamship Blocks. When responding directly to a user, you SHOULD print the Steamship Blocks for the images,
